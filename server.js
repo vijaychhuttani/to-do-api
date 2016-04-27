@@ -24,6 +24,24 @@ app.get('/todos', function (req, res) {
 	res.json(todos);
 });
 
+app.get('/todos/:id', function (req, res) {
+	var todoId = req.params.id;
+	var todoFound;
+
+	todos.forEach (function(todo){
+		if (todo.id == todoId) {
+			todoFound = todo;
+		}
+	});
+
+	if(!todoFound || todoFound === undefined) {
+		res.status(404).send();
+	} else {
+		res.json(todoFound);
+	}
+
+});
+
 app.listen(PORT, function () {
 	console.log("Express server is now listening on port " + PORT + "...");
 })
