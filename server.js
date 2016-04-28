@@ -34,12 +34,23 @@ app.post('/todos', function (req, res) {
 app.get('/todos/:id', function (req, res) {
     var todoId = parseInt(req.params.id);
     var todoFound = _.findWhere(todos, {id: todoId});
-    if (!todoFound || todoFound === undefined) {
-        res.status(404).send("No to-do item found with id " + todoId);
+    if (!todoFound) {
+        res.status(404).json({error: "No to-do item found with id " + todoId});
     } else {
         res.json(todoFound);
     }
 
+});
+
+app.delete('/todos/:id', function (req, res) {
+    var todoId = parseInt(req.params.id);
+    var todoFound = _.findWhere(todos, {id: todoId});
+    if (!todoFound) {
+        res.status(404).json({error: "No to-do item found with id " + todoId});
+    } else {
+        todos = _.without(todos, todoFound);
+        res.json(todoFound);
+    }
 });
 
 app.listen(PORT, function () {
