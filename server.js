@@ -1,20 +1,11 @@
 var express = require('express');
 var app = new express();
 var PORT = process.env.PORT || 3000;
+var bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
-var todos = [{
-	id: 1,
-	description: 'Go home early',
-	completed: false
-}, {
-	id: 2,
-	description: 'Eat awesome food',
-	completed: true
-}, {
-	id: 3,
-	description: 'Sleep tight',
-	completed: false
-}];
+var todos = [];
+var todoNextId = 1;
 
 app.get('/', function(req, res) {
 	res.send("To-DO API Route");
@@ -22,6 +13,26 @@ app.get('/', function(req, res) {
 
 app.get('/todos', function (req, res) {
 	res.json(todos);
+});
+
+app.post('/todos', function (req, res) {
+	var body = req.body;
+	console.log(body);
+	var todo = {};
+	if(typeof body.description !== 'undefined' && body.description !== null){
+		todo.description = body.description;
+		if(typeof body.completed !== 'undefined' && body.completed !== null){
+			todo.completed = body.completed
+		} else {
+			todo.completed = false;
+		}
+		todo.id = todoNextId;
+		todos.push(todo);
+		todoNextId++;
+		res.json(todo);
+	} else {
+		res.send("Error - Please enter description");
+	}
 });
 
 app.get('/todos/:id', function (req, res) {
