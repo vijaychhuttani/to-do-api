@@ -14,7 +14,7 @@ app.get('/', function(req, res) {
     return res.send("To-DO API Route");
 });
 
-//
+//Get todo items with query (for description and status) OR all
 app.get('/todos', function(req, res) {
     var queryParams = req.query;
     var searchCriteria = {};
@@ -50,35 +50,6 @@ app.get('/todos', function(req, res) {
         console.error(e);
         return res.status(500).send(e);
     })
-
-    // var filteredTodos = todos;
-
-    // if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true') {
-    //     filteredTodos = _.where(filteredTodos, {
-    //         "completed": true
-    //     });
-    // } else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
-    //     filteredTodos = _.where(filteredTodos, {
-    //         "completed": false
-    //     });
-    // }
-
-    // if (queryParams.hasOwnProperty("desc") && queryParams.desc.length > 0) {
-    //     filteredTodos = _.filter(filteredTodos, function(todo) {
-    //         if (todo.description.indexOf(queryParams.desc) > -1) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     });
-    // }
-
-    // if (filteredTodos.length === 0) {
-    //     return res.status(404).send({
-    //         "Error": "No such To-Do items found"
-    //     });
-    // }
-    // res.json(filteredTodos);
 });
 
 //POST new todo items
@@ -95,17 +66,6 @@ app.post('/todos', function(req, res) {
         console.log(e);
         res.status(400).json(e);
     });
-
-    // if (!_.isBoolean(todo.completed) || !_.isString(todo.description) || todo.description.trim().length === 0) {
-    //     return res.status(400).send("Bad data provided");
-    // }
-
-    // todo.description = todo.description.trim();
-    // todo.id = todoNextId;
-    // todoNextId = todoNextId + 1;
-    // console.log(todo);
-    // todos.push(todo);
-    // return res.json(todo);
 });
 
 //GET todo items by id
@@ -121,17 +81,6 @@ app.get('/todos/:id', function(req, res) {
     }).catch(function(e) {
         res.status(500).send(e);
     });
-
-    // var todoFound = _.findWhere(todos, {
-    //     id: todoId
-    // });
-    // if (!todoFound) {
-    //     return res.status(404).json({
-    //         error: "No to-do item found with id " + todoId
-    //     });
-    // }
-    // return res.json(todoFound);
-
 });
 
 app.delete('/todos/:id', function(req, res) {
