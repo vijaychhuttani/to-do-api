@@ -14,21 +14,21 @@ app.get('/', function(req, res) {
     return res.send("To-DO API Route");
 });
 
-//Get todo items with query (for description and status) OR all
+//GET todo items with query (for description and status) OR all
 app.get('/todos', function(req, res) {
     var queryParams = req.query;
     var searchCriteria = {};
     var filteredTodos = [];
 
     if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'true') {
-       searchCriteria.completed = true;
+        searchCriteria.completed = true;
     } else if (queryParams.hasOwnProperty("completed") && queryParams.completed === 'false') {
         searchCriteria.completed = false;
     }
 
     if (queryParams.hasOwnProperty("desc") && queryParams.desc.length > 0) {
         searchCriteria.description = {
-            $like : '%'+queryParams.desc+'%'
+            $like: '%' + queryParams.desc + '%'
         }
     }
 
@@ -37,8 +37,8 @@ app.get('/todos', function(req, res) {
     db.todo.findAll({
         where: searchCriteria
     }).then(function(todos) {
-        if(todos.length > 0) {
-            todos.forEach(function(todo){
+        if (todos.length > 0) {
+            todos.forEach(function(todo) {
                 //console.log(todo);
                 filteredTodos.push(todo.toJSON());
             });
@@ -83,18 +83,28 @@ app.get('/todos/:id', function(req, res) {
     });
 });
 
+//DELETE todo items by id
 app.delete('/todos/:id', function(req, res) {
     var todoId = parseInt(req.params.id);
-    var todoFound = _.findWhere(todos, {
-        id: todoId
+
+    db.todo.destroy({
+        where: {
+            id: todoId
+        }
+    }).then(function(count) {
+        //console.log(todo);
+        if (count > 0) {
+            res.json({
+                rowsDeleted: count
+            });
+        } else {
+            res.status(404).json({
+                error: "No to-do item found with id " + todoId
+            });
+        }
+    }).catch(function(e) { 
+        res.status(500).send(e);
     });
-    if (!todoFound) {
-        return res.status(404).json({
-            error: "No to-do item found with id " + todoId
-        });
-    }
-    todos = _.without(todos, todoFound);
-    return res.json(todoFound);
 });
 
 app.put('/todos/:id', function(req, res) {
