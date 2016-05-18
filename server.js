@@ -107,29 +107,41 @@ app.delete('/todos/:id', function(req, res) {
     });
 });
 
+//PUT /todos/:id - Update todo item by id
 app.put('/todos/:id', function(req, res) {
     var body = req.body;
     var todoId = parseInt(req.params.id);
-    var todoFound = _.findWhere(todos, {
-        id: todoId
+    var updateValues = {};
+
+    if (body.hasOwnProperty("completed")) {
+        updateValues.completed = body.completed;
+    }
+
+    if (body.hasOwnProperty("description")) {
+        updateValues.description = body.description;
+    }
+
+    console.log(updateValues);
+
+    db.todo.update(
+        updateValues, {
+            where: {
+                id: todoId
+            }
+        }).then(function(data) {
+        //console.log(data); //[1] -> successfully updated, [0] -> no rows updated
+        if (data[0] > 0) {
+            res.json({
+                success: "To-do Item updated successfully."
+            });
+        } else {
+            res.status(404).json({
+                error: "No to-do found for update."
+            });
+        }
+    }).catch(function(e) {
+        res.status(500).send(e);
     });
-    if (!todoFound) {
-        return res.status(404).json({
-            error: "No to-do item found with id " + todoId
-        });
-    }
-
-    if (body.hasOwnProperty('completed') && !_.isBoolean(body.completed)) {
-        return res.status(400).send("Bad data provided");
-    }
-
-    if (body.hasOwnProperty('description') && !_.isString(body.description) && body.description.trim().length === 0) {
-        return res.status(400).send("Bad data provided");
-    }
-
-    _.extendOwn(todoFound, body);
-
-    return res.json(todoFound);
 
 });
 
