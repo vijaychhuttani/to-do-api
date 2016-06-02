@@ -1,5 +1,7 @@
 var bcryptjs = require('bcryptjs');
 var _ = require('underscore');
+var cryptojs = require('crypto-js');
+var jwt = require('jsonwebtoken');
 
 module.exports = function(sequelize, DataTypes) {
 	var user = sequelize.define('user', {
@@ -56,12 +58,53 @@ module.exports = function(sequelize, DataTypes) {
 						return reject();
 					});
 				});
+			},
+			findByToken: function(token) {
+				return new Promise(function(resolve, reject) {
+					try {
+						var decodedJWT = jwt.verify(token, 'qwerty007');
+						var bytes = cryptojs.AES.decrypt(decodedJWT.token, '@AHOOOOOGA#!');
+						var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+						user.findById(tokenData.id).then(function(user) {
+							if(user){
+								return resolve(user);
+							} else {
+								return reject();
+							}
+						}, function(e) {
+							throw e;
+						});
+					} catch (e) {
+						return reject();
+					}
+				});
 			}
 		},
 		instanceMethods: {
 			toPublicJSON: function() {
 				var json = this.toJSON();
 				return _.pick(json, 'id', 'email', 'updatedAt', 'createdAt');
+			},
+			generateToken: function(type) {
+				if (!_.isString(type)) {
+					return undefined;
+				}
+
+				try {
+					var stringData = JSON.stringify({
+						id: this.get('id'),
+						type: type
+					});
+					var encryptedData = cryptojs.AES.encrypt(stringData, '@AHOOOOOGA#!').toString();
+					var token = jwt.sign({
+						token: encryptedData,
+					}, 'qwerty007');
+					return token;
+				} catch (e) {
+					console.error(e);
+					return undefined;
+				}
 			}
 		}
 	});

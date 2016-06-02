@@ -4,6 +4,7 @@ var PORT = process.env.PORT || 3000;
 var _ = require('underscore');
 var db = require('./db.js');
 var bcryptjs = require('bcryptjs');
+var middleware = require('./middleware.js')(db);
 
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());
@@ -16,7 +17,7 @@ app.get('/', function(req, res) {
 });
 
 //GET todo items with query (for description and status) OR all
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
     var queryParams = req.query;
     var searchCriteria = {};
     var filteredTodos = [];
@@ -54,7 +55,7 @@ app.get('/todos', function(req, res) {
 });
 
 //POST new todo items
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
     var todo = _.pick(req.body, "description", "completed");
 
     db.todo.create({
@@ -70,7 +71,7 @@ app.post('/todos', function(req, res) {
 });
 
 //GET todo items by id
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10);
 
     db.todo.findById(todoId).then(function(todo) {
@@ -85,7 +86,7 @@ app.get('/todos/:id', function(req, res) {
 });
 
 //DELETE todo items by id
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id);
 
     db.todo.destroy({
@@ -109,7 +110,7 @@ app.delete('/todos/:id', function(req, res) {
 });
 
 //PUT /todos/:id - Update todo item by id
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var body = req.body;
     var todoId = parseInt(req.params.id);
     var updateValues = {};
@@ -162,7 +163,12 @@ app.post('/users/login', function(req, res) {
     var body = _.pick(req.body, "email", "password");
 
     db.user.authenticate(body).then(function(user) {
-        return res.json(user.toPublicJSON());
+        var token = user.generateToken('authentication');
+        if(token){
+            return res.header('Auth', token).json(user.toPublicJSON());
+        } else {
+            return res.status(401).send();
+        }      
     }, function(e) {
         return res.status(401).send();
     });
